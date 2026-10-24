@@ -13,7 +13,7 @@ async function update(fn) {
   catch(err){notify('Não foi possível salvar: '+err.message,'error');}
 }
 function counts() {
-  return {pending:db.reviews.filter(r=>r.status==='pending').length,
+  return {pending:db.reviews.filter(r=>r.status==='pending'||r.status==='attention').length,
     copied:db.reviews.filter(r=>r.status==='copied').length,
     done:db.reviews.filter(r=>r.status==='manual_done').length,
     ignored:db.reviews.filter(r=>r.status==='ignored').length};
@@ -44,7 +44,7 @@ function renderQueue() {
   const parent=$('queue');parent.replaceChildren();
   const q=$('search').value.toLowerCase().trim(),filter=$('filter').value;
   const list=db.reviews.filter(r=>{
-    if(filter==='pending' && !['pending','copied'].includes(r.status))return false;
+    if(filter==='pending' && !['pending','copied','attention'].includes(r.status))return false;
     if(filter!=='all'&&filter!=='pending'&&r.status!==filter)return false;
     return !q || [r.externalId,r.product,r.comment].some(s=>String(s).toLowerCase().includes(q));
   });
@@ -56,11 +56,12 @@ function renderQueue() {
     const heading=node('div','review-heading');
     const title=node('div','review-title');
     title.append(node('h3','',r.product),node('p','review-meta',`ID: ${r.externalId}  ·  ★★★★★  ·  ${r.source==='demo'?'DEMONSTRAÇÃO':r.source==='shopee'?'PÁGINA SHOPEE':'IMPORTAÇÃO MANUAL'}`));
-    const label={pending:'Pendente',copied:'Texto copiado',manual_done:'Concluída manualmente',ignored:'Ignorada'}[r.status] ||r.status;
+    const label={pending:'Pendente',attention:'Revisar reclamação',copied:'Texto copiado',manual_done:'Concluída manualmente',ignored:'Ignorada'}[r.status] ||r.status;
     heading.append(title,node('span',`review-badge ${r.status}`,label));card.append(heading);
     if(r.comment)card.append(node('p','quote',r.comment));
+    if(r.flagged)card.append(node('p','attention-note','Atenção: embora tenha 5 estrelas, o comentário pode conter reclamação. Não use agradecimento genérico sem revisar.'));
     const labelEdit=node('label','editor-label','Resposta sugerida — editável');
-    const area=node('textarea','answer-field');area.value=r.message||'';area.rows=3;area.maxLength=2000;
+    const area=node('textarea','answer-field');area.value=r.message||'';area.rows=3;area.maxLength=500;
     labelEdit.append(area);card.append(labelEdit);
     const actionBar=node('div','action-row');
     const saveBtn=node('button','outline small-btn','Salvar texto');
@@ -94,6 +95,23 @@ function renderQueue() {
         target.message=area.value.trim();target.status=['ignored','manual_done'].includes(target.status)?'pending':'ignored';target.updatedAt=ReviewApp.now();ReviewApp.log(x,`Status de ${target.externalId}: ${target.status}.`);});
       notify('Situação atualizada.');
     });
+    
+    if(r.source==='shopee'){
+      const prepare=node('button','primary small-btn','Abrir e preencher na Shopee');
+      prepare.addEventListener('click',async()=>{
+        const message=area.value.trim();
+        if(!message || message.length>500){notify('Informe uma resposta de 1 a 500 caracteres.','error');return;}
+        try {
+          const tab=await getShopeeTab(r.shop);
+          const answer=await chrome.tabs.sendMessage(tab.id,{type:'OPEN_DRAFT',review:{externalId:r.externalId,orderId:r.orderId},message});
+          if(!answer?.ok)throw new Error(answer?.error||'Erro ao abrir rascunho.');
+          await update(x=>{const rr=x.reviews.find(y=>y.id===r.id);if(rr)rr.message=message;ReviewApp.log(x,`Rascunho ${r.externalId} aberto e preenchido, SEM ENVIO.`);});
+          await chrome.tabs.update(tab.id,{active:true});
+          notify('Rascunho preenchido na aba Shopee. Confira antes de clicar em Enviar manualmente.');
+        }catch(e){notify(e.message,'error');}
+      });
+      actionBar.append(prepare);
+    }
     actionBar.append(saveBtn,copyBtn,doneBtn,otherBtn);card.append(actionBar);parent.append(card);
   }
 }
@@ -114,6 +132,7 @@ function renderSettings(){
   $('shop-input').value=db.settings.shop;
   $('enabled-input').checked=db.settings.enabled;
   $('limit-input').value=db.settings.limit;
+  $('run-dashboard-count').textContent=`${db.run.count} / ${db.settings.limit}`;
 }
 function renderLogs(){
   const parent=$('logs');parent.replaceChildren();
@@ -184,3 +203,38 @@ chrome.storage.onChanged.addListener(async(changes,area)=>{
   try{db=await ReviewApp.load();draftTemplates=[...db.templates];render();}
   catch(err){notify('Falha ao iniciar: '+err.message,'error');}
 })();
+
+// Interação assistida com a aba da Shopee; nenhuma ação pode clicar em Enviar.
+async function getShopeeTab(shop){
+  const matches=await chrome.tabs.query({url:['https://seller.shopee.com.br/*','https://seller.shopee.com/*']});
+  if(!matches.length)throw new Error('Abra a página de avaliações da Central do Vendedor.');
+  if(matches.length===1)return matches[0];
+  // Em várias contas abertas, exige identificação inequívoca da loja.
+  const checks=await Promise.all(matches.map(async(t)=>{
+    try {const status=await chrome.tabs.sendMessage(t.id,{type:'STATUS'});return {tab:t,shop:status?.detectedShop};}
+    catch{return {tab:t,shop:''};}
+  }));
+  const same=checks.filter(x=>x.shop?.toLowerCase()===String(shop).toLowerCase());
+  if(same.length===1)return same[0].tab;
+  throw new Error('Há várias abas da Shopee abertas e não consegui identificar a loja com segurança. Feche as outras abas antes de continuar.');
+}
+async function scanDashboard(goNext){
+  const summary=$('scan-dashboard-summary');
+  try{
+    const tab=await getShopeeTab(db.settings.shop);
+    if(goNext){const n=await chrome.tabs.sendMessage(tab.id,{type:'NEXT_PAGE'});if(!n?.ok)throw new Error(n?.error);await new Promise(r=>setTimeout(r,1250));}
+    const result=await chrome.tabs.sendMessage(tab.id,{type:'SCAN'});
+    if(!result?.ok)throw new Error(result?.error||'A página não respondeu.');
+    let added;
+    await update(x=>{added=ReviewApp.addReviews(x,result.reviews,'shopee');ReviewApp.log(x,`Diagnóstico DOM: ${result.diagnostic.cards} cartões, ${result.diagnostic.unconfirmed} notas incertas.`);});
+    const d=result.diagnostic;
+    summary.textContent=`${added.added} novas · ${added.duplicates} repetidas · ${d.unconfirmed} com nota incerta · ${added.flagged} para atenção. Loja detectada: ${d.shopDetected||'(não detectada)'}. Total desta execução ${db.run.count}/${db.settings.limit}.`;
+    notify('Leitura concluída sem publicar respostas.');
+  }catch(e){summary.textContent=e.message;notify(e.message,'error');}
+}
+$('scan-dashboard').addEventListener('click',()=>scanDashboard(false));
+$('next-dashboard').addEventListener('click',()=>scanDashboard(true));
+$('reset-run-dashboard').addEventListener('click',async()=>{
+ if(!confirm('Zerar o contador da execução? As duplicatas e o histórico permanecerão.'))return;
+ await update(x=>{x.run={count:0,pages:0,startedAt:ReviewApp.now()};ReviewApp.log(x,'Contador da execução reiniciado.');});notify('Nova execução iniciada.');
+});

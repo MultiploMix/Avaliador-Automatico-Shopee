@@ -1,112 +1,48 @@
-/* Biblioteca local — nenhum endpoint externo. */
-(function (root) {
-  'use strict';
-  const KEY = 'shopee_review_local_v1';
-  const DEFAULT_TEMPLATES = [
-    'Agradecemos muito pela avaliação! Ficamos felizes que sua experiência tenha sido positiva. Esperamos ver você novamente!',
-    'Muito obrigado pelas 5 estrelas! Sua confiança é muito importante para nossa equipe. Conte sempre conosco!',
-    'Que bom saber que você gostou da sua compra! Agradecemos pela avaliação e esperamos atendê-lo novamente.',
-    'Agradecemos pelo carinho e pela confiança em nossa loja. Sua avaliação faz toda a diferença para nós!',
-    'Muito obrigado por compartilhar sua experiência! Ficamos felizes com sua satisfação e desejamos que aproveite sua compra.',
-    'Sua avaliação de 5 estrelas alegrou nossa equipe! Obrigado por escolher nossa loja. Até a próxima!',
-    'É uma satisfação receber sua avaliação positiva! Agradecemos pela preferência e seguimos à sua disposição.',
-    'Obrigada pela confiança e pelas 5 estrelas! Sua opinião é muito valiosa para continuarmos melhorando.',
-    'Ficamos muito felizes em receber seu retorno! Agradecemos pela compra e pela excelente avaliação.',
-    'Obrigado pela avaliação! Trabalhamos com dedicação para oferecer uma boa experiência. Esperamos sua próxima visita.'
-  ];
-  const DEFAULT_SETTINGS = Object.freeze({
-    shop: 'Múltiplo Mix', enabled: true, rating: 5, limit: 100,
-    mode: 'review', schedule: 'Não habilitado (execução manual)',
-    version: 1
-  });
-  const now = () => new Date().toISOString();
-  function initialData() {
-    return {settings: {...DEFAULT_SETTINGS}, templates: [...DEFAULT_TEMPLATES],
-      reviews: [], logs: [{at:now(), level:'info', text:'Projeto inicializado em modo revisão: nenhuma resposta é enviada.'}]};
-  }
-  function safeInt(n, fallback) {
-    const value = Number(n); return Number.isInteger(value) && value >= 1 && value <= 100 ? value : fallback;
-  }
-  function normalizeSettings(s) {
-    return {...DEFAULT_SETTINGS, shop: String(s?.shop || DEFAULT_SETTINGS.shop).slice(0,80),
-      enabled: !!s?.enabled, limit: safeInt(s?.limit, 100), rating: 5, mode: 'review',
-      schedule: DEFAULT_SETTINGS.schedule};
-  }
-  function normalize(db) {
-    if (!db || typeof db !== 'object') return initialData();
-    return {settings: normalizeSettings(db.settings || DEFAULT_SETTINGS),
-      templates: Array.isArray(db.templates) && db.templates.length ? db.templates.filter(t => typeof t === 'string' && t.trim()).slice(0,100) : [...DEFAULT_TEMPLATES],
-      reviews: Array.isArray(db.reviews) ? db.reviews : [],
-      logs: Array.isArray(db.logs) ? db.logs.slice(-500) : []};
-  }
-  async function load() {
-    const data = await chrome.storage.local.get(KEY);
-    return normalize(data[KEY]);
-  }
-  async function save(db) {
-    await chrome.storage.local.set({[KEY]:normalize(db)});
-  }
-  // Hash determinístico de chave da avaliação, sem armazenar o nome do comprador.
-  function hash(s) {
-    let n = 2166136261;
-    for (const ch of String(s)) {
-      n ^= ch.codePointAt(0);
-      n = Math.imul(n,16777619);
-    }
-    return (n>>>0).toString(16).padStart(8,'0');
-  }
-  function stableId(input, shop) {
-    const id = String(input.externalId || '').trim();
-    if (!id) return null;
-    // Chave composta sem hash: não há colisões entre IDs de avaliações distintas.
-    return JSON.stringify([String(shop).trim().toLocaleLowerCase('pt-BR'), id]);
-  }
-  function chooseTemplate(templates, id) {
-    if (!Array.isArray(templates) || !templates.length) return '';
-    return templates[parseInt(hash(id),16) % templates.length];
-  }
-  function log(db, text, level='info') {
-    db.logs.push({at:now(), level, text: String(text).slice(0,240)});
-    if (db.logs.length > 500) db.logs = db.logs.slice(-500);
-  }
-  function addReviews(db, inputs, source='manual') {
-    const result={added:0,duplicates:0,excluded:0,invalid:0,limited:0};
-    const existing = new Set(db.reviews.map(r=>r.id));
-    if (!db.settings.enabled) {result.invalid=inputs.length;log(db,'Preparação desabilitada nas configurações.','warn');return result;}
-    for (const data of inputs) {
-      if (result.added >= db.settings.limit) { result.limited++; continue; }
-      if (Number(data.rating) !== 5) {result.excluded++;continue;}
-      const id=stableId({...data,source},db.settings.shop);
-      if (!id || !String(data.externalId).trim()) {result.invalid++;continue;}
-      if (existing.has(id)) {result.duplicates++;continue;}
-      const timestamp=now();
-      const record = {id, externalId: String(data.externalId).trim().slice(0,120),
-        shop: db.settings.shop, rating: 5, product: String(data.product || 'Produto não identificado').trim().slice(0,160),
-        comment:String(data.comment || '').trim().slice(0,800), source,
-        status:'pending', message:chooseTemplate(db.templates,id),
-        at:timestamp, updatedAt:timestamp, copies:0};
-      db.reviews.unshift(record);
-      existing.add(id);
-      result.added++;
-    }
-    log(db,`Importação ${source}: ${result.added} incluídas, ${result.duplicates} duplicadas, ${result.excluded} notas excluídas, ${result.invalid} inválidas, ${result.limited} acima do limite.`);
-    return result;
-  }
-  function parseLines(input) {
-    const valid=[]; const errors=[];
-    const lines=String(input).split(/\r?\n/);
-    lines.forEach((line,index)=>{
-      if (!line.trim() || /^\s*#/.test(line)) return;
-      const columns=line.split('|');
-      if (columns.length<4) {errors.push(`Linha ${index+1}: informe ID | nota | produto | comentário.`);return;}
-      const [externalId,ratingStr,product,...rest]=columns.map(s=>s.trim());
-      const rating=Number(ratingStr);
-      if (!externalId || !Number.isInteger(rating) || rating<1 || rating>5 || !product) {
-        errors.push(`Linha ${index+1}: ID, nota (1 a 5) ou produto inválido.`);return;
-      }
-      valid.push({externalId,rating,product,comment:rest.join(' | ')});
-    });
-    return {valid,errors};
-  }
-  root.ReviewApp = {KEY,DEFAULT_TEMPLATES,DEFAULT_SETTINGS,initialData,normalize,normalizeSettings,load,save,hash,stableId,chooseTemplate,log,addReviews,parseLines,now};
-})(typeof window !== 'undefined' ? window : globalThis);
+/* Shopee Avaliações V2: armazenamento local, sem chamadas externas. */
+(function(root){
+'use strict';
+const KEY='shopee_review_local_v1'; // preserva dados da primeira versão
+const DEFAULT_TEMPLATES=[
+'Agradecemos pela avaliação e por escolher nossa loja! Ficamos felizes com sua experiência. Até a próxima!',
+'Muito obrigado pelas 5 estrelas! É um prazer atender você. Conte sempre conosco!',
+'Que bom receber sua avaliação! Agradecemos sua confiança e esperamos atender você novamente.',
+'Obrigado por compartilhar sua experiência conosco. Sua avaliação é muito importante!',
+'Ficamos felizes com sua avaliação. Agradecemos pela preferência e seguimos à disposição!',
+'Sua confiança faz toda a diferença para nossa equipe. Muito obrigado pela avaliação!',
+'Agradecemos pelas cinco estrelas e pelo carinho! Esperamos receber você novamente em breve.',
+'Muito obrigado por avaliar sua compra. Trabalhamos com dedicação para oferecer uma boa experiência!',
+'Ficamos felizes em receber seu retorno. Nossa equipe agradece pela escolha da loja!',
+'Muito obrigado pela preferência! Sua avaliação nos incentiva a melhorar a cada dia.'
+];
+const DEFAULT_SETTINGS={shop:'Múltiplo Mix',enabled:true,rating:5,limit:100,mode:'review',version:2};
+const now=()=>new Date().toISOString();
+function initialData(){return {settings:{...DEFAULT_SETTINGS},templates:[...DEFAULT_TEMPLATES],reviews:[],run:{count:0,startedAt:now(),pages:0},logs:[{at:now(),level:'info',text:'V2 iniciada: envio automático permanentemente desativado.'}]};}
+function normalizeSettings(s={}){const lim=Number(s.limit);return {...DEFAULT_SETTINGS,shop:String(s.shop||DEFAULT_SETTINGS.shop).slice(0,80),enabled:s.enabled!==false,limit:Number.isInteger(lim)&&lim>=1&&lim<=100?lim:100};}
+function normalize(data){if(!data||typeof data!=='object')return initialData();return {settings:normalizeSettings(data.settings),templates:Array.isArray(data.templates)&&data.templates.length?data.templates.filter(x=>typeof x==='string'&&x.trim()).slice(0,100).map(x=>x.slice(0,500)):[...DEFAULT_TEMPLATES],reviews:Array.isArray(data.reviews)?data.reviews:[],run:data.run&&typeof data.run==='object'?{count:Number(data.run.count)||0,startedAt:String(data.run.startedAt||now()),pages:Number(data.run.pages)||0}:{count:0,startedAt:now(),pages:0},logs:Array.isArray(data.logs)?data.logs.slice(-700):[]};}
+async function load(){return normalize((await chrome.storage.local.get(KEY))[KEY]);}
+async function save(db){await chrome.storage.local.set({[KEY]:normalize(db)});}
+function hash(s){let n=2166136261;for(const ch of String(s)){n^=ch.codePointAt(0);n=Math.imul(n,16777619);}return(n>>>0).toString(16).padStart(8,'0');}
+function shopKey(shop){return String(shop||'').trim().toLocaleLowerCase('pt-BR');}
+function stableId(input,shop){const id=String(input.externalId||'').trim();return id?JSON.stringify([shopKey(shop||input.shop),id]):null;}
+function chooseTemplate(ts,id){return Array.isArray(ts)&&ts.length?ts[parseInt(hash(id),16)%ts.length]:'';}
+function log(db,message,level='info'){db.logs.push({at:now(),level,text:String(message).slice(0,350)});if(db.logs.length>700)db.logs=db.logs.slice(-700);}
+function hasConcern(comment){return /(?:n[aã]o\s+(?:funciona|serve|recomendo|gostei|presta|segura|veio)|defeito|quebrad|horr[ií]vel|p[eé]ssim|decep|ruim|fr[aá]gil|insatisfeit|reclama|vazou|falta|pequeno demais|press[aã]o|nem\s+.*\s+segur)/i.test(String(comment||''));}
+function addReviews(db,inputs,source='manual'){
+ const outcome={added:0,duplicates:0,excluded:0,invalid:0,limited:0,flagged:0};const maxNew=source==='shopee'?Math.max(0,db.settings.limit-(db.run?.count||0)):db.settings.limit;const known=new Set(db.reviews.map(x=>x.id));
+ if(!db.settings.enabled){outcome.invalid=inputs.length;log(db,'Preparação desabilitada.','warn');return outcome;}
+ for(const item of inputs){
+  if(Number(item.rating)!==5){outcome.excluded++;continue;}
+  if(outcome.added>=maxNew){outcome.limited++;continue;}
+  const shop=String(item.shop||db.settings.shop).trim().slice(0,80);
+  const id=stableId(item,shop);if(!id){outcome.invalid++;continue;}
+  if(known.has(id)){outcome.duplicates++;continue;}
+  const flagged=hasConcern(item.comment);if(flagged)outcome.flagged++;
+  const t=now();db.reviews.unshift({id,externalId:String(item.externalId).trim().slice(0,180),orderId:String(item.orderId||'').slice(0,70),shop,rating:5,product:String(item.product||'Produto não identificado').trim().slice(0,240),comment:String(item.comment||'').trim().slice(0,1200),buyer:String(item.buyer||'').slice(0,100),reviewDate:String(item.reviewDate||'').slice(0,40),source,status:flagged?'attention':'pending',message:flagged?'':chooseTemplate(db.templates,id),flagged,at:t,updatedAt:t,copies:0});known.add(id);outcome.added++;
+ }
+ if(source==='shopee'){if(!db.run)db.run={count:0,pages:0,startedAt:now()};db.run.count+=outcome.added;db.run.pages++;}
+ log(db,`Coleta ${source}: ${outcome.added} novas, ${outcome.duplicates} repetidas, ${outcome.excluded} excluídas, ${outcome.flagged} para atenção, ${outcome.limited} acima do limite.`);
+ return outcome;
+}
+function parseLines(raw){const valid=[],errors=[];String(raw).split(/\r?\n/).forEach((line,n)=>{if(!line.trim()||/^\s*#/.test(line))return;const [externalId,rating,product,...parts]=line.split('|').map(x=>x.trim());if(!externalId||!product||!Number.isInteger(Number(rating))||Number(rating)<1||Number(rating)>5){errors.push('Linha '+(n+1)+' inválida.');return;}valid.push({externalId,rating:Number(rating),product,comment:parts.join(' | ')});});return{valid,errors};}
+root.ReviewApp={KEY,DEFAULT_TEMPLATES,DEFAULT_SETTINGS,initialData,normalize,normalizeSettings,load,save,hash,stableId,chooseTemplate,log,addReviews,parseLines,hasConcern,now};
+})(typeof window!=='undefined'?window:globalThis);

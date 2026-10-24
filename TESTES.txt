@@ -1,16 +1,26 @@
-RESULTADO DA VERIFICAÇÃO LOCAL
-=============================
-- Manifest V3: JSON válido.
-- Todos os arquivos JavaScript: checagem de sintaxe concluída com Node.js.
-- Motor de dados: testes de criação, filtro de 5 estrelas, exclusão de 4 estrelas,
-  deduplicação entre origens, persistência lógica de status, limite de lote,
-  seleção de mensagens, validação de entrada e modo revisão fixo: OK.
-- Extrator conservador: testes simulados de nota incerta, duplicata, resposta
-  anterior, ID ausente e conteúdo invisível: OK.
-- Não há botão/função de envio à Shopee, uso de cookies ou chamada de rede.
-- Ambiente real do Seller Center NÃO TESTADO: o HTML e a interface podem variar.
-- Layout de interface não submetido a teste visual completo em navegador de usuário.
+TESTES DA EXTENSÃO V2 — 24/10/2026
 
-Executar testes (opcional, requer Node.js instalado):
-  node tests/test_shared.js
-  node tests/test_scanner.js
+PASSOU — Motor de dados (Node.js):
+- Configurações: habilitada, só 5 estrelas, limite 100, revisão humana.
+- Exclusão da nota 4.
+- Duplicata na mesma loja bloqueada; mesmo ID de loja diferente permitido.
+- Comentário com reclamação marcado para atenção, sem mensagem genérica.
+- Limite de 100 novas avaliações preservado ao ler páginas adicionais.
+- Parser de importação manual válido.
+
+PASSOU — Integração em interface SIMULADA (Chromium/Playwright):
+- Localização de dois cartões contendo 'ID do pedido' e botão Responder.
+- Identificação de avaliação 5 estrelas e exclusão de avaliação de outra nota.
+- Extração do pedido e nome de loja 'aconchegoimportados'.
+- Clique para abrir modal e preenchimento do rascunho.
+- Botão Enviar não foi acionado (contador de envios = 0).
+- Paginação bloqueada durante a abertura do modal.
+- Paginação acionada após fechamento do modal.
+
+PENDENTE — Validação real na conta da Shopee:
+- Confirmar o DOM de 2026 para estrelas, ID, comentários, resposta e paginação.
+- Confirmar que a loja detectada corresponde à conta logada.
+- Confirmar se a Shopee aceita preenchimento disparando InputEvent do React.
+- Testar uma única avaliação sem clicar em Enviar; ajustar o extrator se preciso.
+
+IMPORTANTE: nenhum teste foi feito em sua conta real e nenhuma resposta foi publicada.

@@ -1,0 +1,20 @@
+<!doctype html><html lang="pt-br"><meta charset="utf-8">
+<body><header><span class="shop-name">aconchegoimportados</span></header>
+<section id="reviews">
+ <article class="review-item"><div class="buyer">petwilson | ID do pedido <a>261018W0HVW18X</a></div>
+ <div class="product-name">Ventosa de Sucção Reparo</div><div class="stars"><span class="rating-star">★</span><span class="rating-star">★</span><span class="rating-star">★</span><span class="rating-star">★</span><span class="rating-star">★</span></div><div class="review-comment">Gostei muito</div>
+ <time>24/10/2026 14:49</time><button class="reply">Responder</button></article>
+ <article class="review-item"><div>buyer2 | ID do pedido <a>261018V7EAY98R</a></div>
+ <div class="product-name">Escova pet</div><div class="stars"><span class="rating-star">★</span><span class="rating-star">★</span><span class="rating-star">★</span><span class="rating-star">★</span></div><time>24/10/2026 14:44</time><button class="reply">Responder</button></article>
+ </section>
+ <div class="pagination"><button aria-label="next page" class="pagination-next">›</button></div>
+ <script>
+ window.sends=0; window.nexts=0;
+ document.querySelectorAll('.reply').forEach(b=>b.onclick=()=>{
+  const old=document.querySelector('[role=dialog]');if(old)old.remove();
+  const div=document.createElement('div');div.setAttribute('role','dialog');
+  div.innerHTML='<h2>Responder</h2><textarea placeholder="Insira sua resposta."></textarea><button id="send">Enviar</button>';
+  document.body.appendChild(div);div.querySelector('#send').onclick=()=>window.sends++;
+ });
+ document.querySelector('.pagination-next').onclick=()=>window.nexts++;
+ </script></body></html>

@@ -1,11 +1,15 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shopee Avaliações</title><link rel="stylesheet" href="styles.css"></head>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shopee Avaliações — V2</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="v2.css"></head>
 <body class="popup-body"><main class="popup-wrap">
-  <div class="brand compact"><span class="brand-icon">★</span><div><strong>Shopee Avaliações</strong><small>Assistente local • V1.0</small></div></div>
-  <div class="safe"><span class="indicator"></span> MODO REVISÃO — ENVIO DESATIVADO</div>
-  <div class="popup-grid"><div class="stat"><span>Pendentes</span><b id="pending">0</b></div><div class="stat"><span>Feitas manualmente</span><b id="done">0</b></div></div>
-  <div class="small-details"><span>Loja</span><strong id="shop">Múltiplo Mix</strong><span>Critério</span><strong>Somente 5 estrelas</strong><span>Limite por coleta</span><strong id="limit">100</strong></div>
-  <button id="scan" class="primary full">Analisar avaliações desta página</button>
-  <button id="dashboard" class="secondary full">Abrir painel completo</button>
-  <div id="status" role="status" aria-live="polite" class="note">Abra a página de avaliações da Central do Vendedor e clique em analisar. Nenhuma resposta será publicada.</div>
-  <p class="tiny">A leitura é pontual, sob seu comando, sem navegação automática. Se o layout não for identificado, utilize a importação manual do painel.</p>
+  <div class="brand compact"><span class="brand-icon">★</span><div><strong>Shopee Avaliações</strong><small>Revisão assistida • V2.0</small></div></div>
+  <div class="safe">● MODO REVISÃO • NÃO ENVIA RESPOSTAS</div>
+  <div class="popup-grid"><div class="stat"><span>Fila a revisar</span><b id="pending">0</b></div><div class="stat"><span>Coletadas nesta execução</span><b id="run-count">0 / 100</b></div></div>
+  <div class="small-details"><span>Loja configurada</span><strong id="shop">—</strong><span>Critério</span><strong>5 estrelas apenas</strong><span>Controle</span><strong>Revisão humana</strong></div>
+  <button class="primary full" id="scan">1. Ler avaliações desta página</button>
+  <button class="secondary full" id="next">Próxima página + nova leitura ›</button>
+  <button class="outline full" id="reset-run">Nova execução (limite de 100)</button>
+  <div id="status" role="status" aria-live="polite" class="note">Abra a tela Gerenciar Avaliações na Shopee, marque “Para Responder” e somente “5 estrelas”; depois clique em Ler.</div>
+  <div class="popup-heading"><strong>Fila de revisão</strong><span id="items-count">0 itens</span></div>
+  <div id="quick-queue" class="popup-review-list"></div>
+  <button id="dashboard" class="secondary full">Abrir painel: editar respostas e histórico</button>
+  <p class="tiny">A extensão pode abrir a janela Responder e preencher o rascunho. Você decide manualmente se clica em Enviar. Após o envio, confirme a conclusão no painel.</p>
 </main><script src="shared.js"></script><script src="popup.js"></script></body></html>

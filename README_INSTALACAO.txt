@@ -1,108 +1,94 @@
-SHOPEE AVALIAÇÕES — REVISÃO LOCAL V1.0
-====================================
+SHOPEE AVALIAÇÕES — REVISÃO ASSISTIDA V2.0
+=======================================
+Extensão Google Chrome para Windows. NÃO USA AGENTES DE IA.
 
-OBJETIVO
---------
-Extensão Chrome Manifest V3 para preparar respostas a avaliações de 5 estrelas, com
-painel, mensagens editáveis, registro local de duplicatas e histórico. NÃO PUBLICA,
-NÃO CLICA EM BOTÕES DA SHOPEE E NÃO FAZ REQUISIÇÕES DE REDE À SHOPEE.
-Não usa IA, API ou servidor externo; nada é pago para rodar o software.
+O QUE FOI IMPLEMENTADO
+---------------------
+- Painel próprio com fila, edição de mensagens, modelos, configurações e logs.
+- Leitura sob comando do usuário dos cartões da página Gerenciar Avaliações.
+- Apenas avaliações comprovadamente de 5 estrelas entram na fila.
+- Limite de 100 novos cartões da Shopee por execução, entre várias páginas.
+- Bloqueio de duplicatas por loja + identificador estável da avaliação.
+- Identificação tentativa do nome da loja na página. Configuração inicial: Múltiplo Mix.
+- Avaliações com possíveis reclamações são sinalizadas e NÃO recebem resposta genérica.
+- Botão 'Abrir e preencher': localiza a avaliação na página, abre a janela
+  'Responder' e insere a mensagem SEM CLICAR 'ENVIAR'.
+- Botão 'Próxima página + nova leitura', acionado manualmente e conservador.
+- Registro da conclusão apenas quando o operador confirma ter enviado manualmente.
+- Registro local de logs e opção de exportar backup JSON.
+- Importação manual e demonstração para treinamento sem Shopee.
 
-INSTALAÇÃO NO GOOGLE CHROME (WINDOWS)
--------------------------------------
-1. Extraia o ZIP em uma pasta permanente do seu computador, por exemplo:
-   C:\\ShopeeAvaliacoes\\
-2. Abra o Chrome, digite chrome://extensions e pressione Enter.
-3. Ative "Modo do desenvolvedor" (canto superior direito).
-4. Clique em "Carregar sem compactação".
-5. Selecione a pasta EXTENSION (a que contém manifest.json).
-6. Fixe o ícone da extensão (menu de extensões / ícone de peça de quebra-cabeça).
-7. Clique no ícone e em "Abrir painel completo".
+COMO INSTALAR NO GOOGLE CHROME
+-----------------------------
+1. Extraia todo o ZIP para uma pasta que NÃO será movida, por exemplo:
+   C:\ShopeeAvaliacoesV2\
+2. Abra o Chrome e acesse chrome://extensions
+3. Ative 'Modo do desenvolvedor'.
+4. Clique em 'Carregar sem compactação'.
+5. Selecione a pasta 'extension' DENTRO de shopee_avaliacoes_v2.
+6. Fixe o ícone 'Shopee Avaliações — Revisão Assistida' na barra do Chrome.
+7. Caso já tenha V1 instalada, remova/desative a V1 DEPOIS de fazer backup
+   do histórico, para não confundir as duas extensões. Ao instalar V2 em
+   outro diretório o Chrome pode usar outro ID, sem migrar registros da V1.
 
-TESTE INICIAL SEGURO
---------------------
-1. Abra "Importar / Testar" no painel.
-2. Clique em "Carregar demonstração".
-3. Na "Fila de revisão", veja 3 avaliações de 5 estrelas (a de 4 estrelas
-   é excluída; um ID duplicado também não entra).
-4. Edite uma resposta, clique em "Salvar texto" e depois "Copiar resposta".
-5. Confirme o texto copiado em um editor comum. NADA FOI ENVIADO À SHOPEE.
-6. Use "Marcar feita manualmente" apenas após ter respondido à avaliação
-   de verdade na Shopee por conta própria.
-7. Em "Histórico", confira os eventos e em "Importar / Testar" remova a demo.
-
-IMPORTAÇÃO MANUAL
------------------
-Use uma avaliação por linha, no formato:
-ID_DA_AVALIACAO | 5 | Nome do produto | Comentário do comprador
-AV-2026-001 | 5 | Exemplo de produto | Excelente!
-AV-2026-002 | 4 | Exemplo de produto | Gostei (essa é excluída)
-
-Cada ID precisa ser único e estável dentro da loja; repetições são bloqueadas,
-mesmo que você tenha marcado a avaliação como concluída ou ignorada.
-O limite de 100 é de AVALIAÇÕES NOVAS adicionadas por operação, não é limite
-máximo de histórico acumulado.
-
-LEITURA PONTUAL DA CENTRAL DO VENDEDOR (EXPERIMENTAL)
------------------------------------------------------
-1. Acesse manualmente a Central do Vendedor:
-   https://seller.shopee.com.br/
-2. Navegue por conta própria até a página de avaliações.
-3. Deixe na tela os cartões que deseja analisar.
-4. Clique no ícone da extensão > "Analisar avaliações desta página".
-5. Leia o diagnóstico (cartões reconhecidos, nota incerta, ID ausente).
-6. Abra o painel para analisar tudo ANTES de copiar respostas.
-
-A leitura só tenta extrair cartões VÍSIVEIS da aba ativa e depende do HTML da
-Shopee. NÃO foi validada em uma conta real. Se o layout não for reconhecido,
-nada é importado; use importação manual até adaptar os seletores com base
-em capturas de tela/estrutura disponibilizada voluntariamente pelo usuário.
-Nenhum botão da Shopee é clicado, nenhuma avaliação é aberta automaticamente,
-não há rolagem ou paginação automática.
-
-PADRÕES ATIVOS
---------------
-- Loja: Múltiplo Mix (ajustável)
-- Preparação: ligada
-- Apenas 5 estrelas: fixo
-- Limite de 100 novos registros por operação
-- Modo revisão: fixo
-- Respostas editáveis e selecionadas em rotação estável com base no ID
-- Histórico: últimos 500 eventos
-- Sem integração/validacão de publicação, agendamento ou envio automático
-- Armazenamento no próprio perfil de navegador (chrome.storage.local)
-- Backup JSON por botão "Exportar backup"; esta versão não tem importação de backup.
-
-PRIVACIDADE E LIMITAÇÕES
+PRIMEIRO TESTE NA SHOPEE
 -----------------------
-Sem comunicação com nossos servidores ou APIs de terceiros. Comentários,
-produtos, IDs e textos importados são armazenados localmente no perfil Chrome;
-proteja o perfil, os backups e o PC conforme suas práticas de privacidade.
-Não salva credenciais. Não afirma que uma resposta foi enviada: a marcação de
-conclusão depende da confirmação do operador.
-Se o Chrome for removido ou os dados da extensão apagados, registros podem ser
-perdidos. Use o backup para arquivo, observando que NÃO existe restauração
-pelo painel nesta V1.
+1. Faça login normalmente na Central do Vendedor, em seller.shopee.com.br.
+2. Entre em Atendimento ao Cliente > Gerenciamento de Revisões/Avaliações.
+3. No filtro Status, clique em 'Para Responder'.
+4. Em Avaliações por Estrela, deixe marcada SOMENTE '5 estrela'.
+5. Clique em 'Aplicar' e espere os cartões aparecerem.
+6. Clique no ícone da extensão e em '1. Ler avaliações desta página'.
+7. Confira o diagnóstico: cartões encontrados, avaliações adicionadas,
+   repetidas, notas incertas, loja detectada e textos a revisar.
+8. Na 'Fila de revisão', revise o comentário e a mensagem proposta.
+9. Clique em 'Abrir e preencher rascunho': a extensão deverá abrir o modal
+   da avaliação que está na página e preencher o texto. NÃO PUBLICA.
+10. Confira a resposta. Se desejar, clique em 'Enviar' MANUALMENTE na Shopee.
+11. Somente depois do envio real, retorne ao painel da extensão e marque
+    'Marcar feita manualmente'. A extensão NÃO verifica automaticamente envio.
+12. Feche o modal, clique em 'Próxima página + nova leitura' e repita.
 
-ATENÇÃO: Termos da Shopee restringem bots e softwares não autorizados.
-Consulte https://help.shopee.com.br/portal/4/article/77113 antes de utilizar
-qualquer automação na conta. A coleta pontual também deve respeitar as regras
-aplicáveis. Solicite autorização/validação junto à Shopee antes de operar
-integrações automatizadas.
+CONFIGURAÇÕES DE ENTREGA
+-----------------------
+  automação de PREPARAÇÃO: habilitada
+  notas: SOMENTE 5 estrelas
+  notas de 1 a 4 estrelas: excluídas
+  limite: 100 AVALIAÇÕES NOVAS por execução de leitura em páginas
+  modo: revisão humana
+  envio da Shopee: desativado, sem qualquer caminho de publicação automática
+  respostas: até 500 caracteres
+  armazenamento: chrome.storage.local no seu computador
 
-ARQUIVOS
---------
-extension/manifest.json    Manifest V3 sem permissão permanente de site
-extension/popup.*         Janela do botão do Chrome
-extension/dashboard.*     Painel local
-extension/shared.js       Regras, armazenamento e deduplicação
-extension/scanner.js      Leitura pontual DOM (somente execução por clique)
-extension/styles.css      Estilos
-extension/assets/         Ícones
+AVISOS E LIMITAÇÕES
+------------------
+- A Shopee altera o HTML da Central do Vendedor. Como não há acesso real à sua
+  conta durante a construção, os seletores são heurísticos e precisam de
+  validação ao vivo. Se a extensão informar nota/ID incerto ou não identificar
+  cartão/modal/paginação, ela BLOQUEIA a ação e informa o problema.
+- A tela da Shopee enviada como referência mostra aconchegoimportados,
+  enquanto a configuração inicial da extensão vem de Múltiplo Mix. Confira
+  a loja detectada após cada coleta. Registros são separados pelo nome da loja.
+- Não há serviço em segundo plano, agendamento semanal nem envio em lote.
+  A leitura, a abertura do modal e a paginação dependem de ações do usuário.
+- Chrome e sessão Shopee devem permanecer ativos. Não armazenamos senha.
+- Cuidado com dados pessoais em backups: comentários e IDs ficam salvos
+  somente no armazenamento local deste perfil do Chrome.
+- Os termos da Shopee podem restringir automações de interface não autorizadas;
+  utilize somente mediante observância das regras da plataforma.
+- No primeiro teste, use UMA avaliação real, confira a loja e a mensagem,
+  e NÃO clique em Enviar enquanto a automação não estiver validada.
 
-tests/                    Testes locais do motor de dados
+ARQUIVOS IMPORTANTES
+--------------------
+extension/manifest.json     configuração Chrome Manifest V3
+extension/content.js       integração com os cartões/modal/paginação
+extension/popup.html/js    controles na barra do Chrome
+extension/dashboard.html/js  painel de revisão, mensagens, logs
+extension/shared.js        deduplicação, regras e armazenamento
+extension/styles.css/v2.css  interface
+tests/test_shared_v2.js teste de regras offline
+tests/test_interface.py teste de interface em página fictícia via Playwright
 
-Para atualizar: substitua os arquivos na pasta fixa e clique em "Recarregar"
-em chrome://extensions. O Chrome preserva os dados se o ID da extensão continuar
-igual, mas como "Carregar sem compactação" pode gerar ID diferente se a pasta
-mudar, evite mover ou recriar a pasta após começar a usar.
+Para atualizar: edite os arquivos na MESMA pasta e clique em Recarregar
+em chrome://extensions; o histórico será mantido no perfil dessa extensão.
