@@ -1,0 +1,16 @@
+RESULTADO DA VERIFICAÇÃO LOCAL
+=============================
+- Manifest V3: JSON válido.
+- Todos os arquivos JavaScript: checagem de sintaxe concluída com Node.js.
+- Motor de dados: testes de criação, filtro de 5 estrelas, exclusão de 4 estrelas,
+  deduplicação entre origens, persistência lógica de status, limite de lote,
+  seleção de mensagens, validação de entrada e modo revisão fixo: OK.
+- Extrator conservador: testes simulados de nota incerta, duplicata, resposta
+  anterior, ID ausente e conteúdo invisível: OK.
+- Não há botão/função de envio à Shopee, uso de cookies ou chamada de rede.
+- Ambiente real do Seller Center NÃO TESTADO: o HTML e a interface podem variar.
+- Layout de interface não submetido a teste visual completo em navegador de usuário.
+
+Executar testes (opcional, requer Node.js instalado):
+  node tests/test_shared.js
+  node tests/test_scanner.js

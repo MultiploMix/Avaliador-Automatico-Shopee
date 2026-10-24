@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Shopee Avaliações — Revisão Local",
+  "version": "1.0.0",
+  "description": "Prepara respostas a avaliações 5 estrelas para revisão humana, sem publicar na Shopee.",
+  "minimum_chrome_version": "110",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "action": {"default_title": "Shopee Avaliações — Revisão", "default_popup": "popup.html", "default_icon": {"16": "assets/icon16.png", "32": "assets/icon32.png"}},
+  "icons": {"16": "assets/icon16.png", "32": "assets/icon32.png", "48": "assets/icon48.png", "128": "assets/icon128.png"},
+  "options_page": "dashboard.html"
+}
