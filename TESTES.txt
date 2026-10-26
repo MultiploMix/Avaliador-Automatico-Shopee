@@ -1,26 +1,5 @@
-TESTES DA EXTENSÃO V2 — 24/10/2026
+Testes da versão V5: executar node tests/test_shared_v2.js; node tests/test_sentimento_v5.js; python tests/test_interface.py; python tests/test_automation.py. O envio real não foi testado.
 
-PASSOU — Motor de dados (Node.js):
-- Configurações: habilitada, só 5 estrelas, limite 100, revisão humana.
-- Exclusão da nota 4.
-- Duplicata na mesma loja bloqueada; mesmo ID de loja diferente permitido.
-- Comentário com reclamação marcado para atenção, sem mensagem genérica.
-- Limite de 100 novas avaliações preservado ao ler páginas adicionais.
-- Parser de importação manual válido.
+V6: node tests/test_speed_v6.js ; python tests/test_speed_v6.py
 
-PASSOU — Integração em interface SIMULADA (Chromium/Playwright):
-- Localização de dois cartões contendo 'ID do pedido' e botão Responder.
-- Identificação de avaliação 5 estrelas e exclusão de avaliação de outra nota.
-- Extração do pedido e nome de loja 'aconchegoimportados'.
-- Clique para abrir modal e preenchimento do rascunho.
-- Botão Enviar não foi acionado (contador de envios = 0).
-- Paginação bloqueada durante a abertura do modal.
-- Paginação acionada após fechamento do modal.
-
-PENDENTE — Validação real na conta da Shopee:
-- Confirmar o DOM de 2026 para estrelas, ID, comentários, resposta e paginação.
-- Confirmar que a loja detectada corresponde à conta logada.
-- Confirmar se a Shopee aceita preenchimento disparando InputEvent do React.
-- Testar uma única avaliação sem clicar em Enviar; ajustar o extrator se preciso.
-
-IMPORTANTE: nenhum teste foi feito em sua conta real e nenhuma resposta foi publicada.
+V7: python tests/test_limit_v7.py; verificar meta, filtro e paginação e sem envio no teste.

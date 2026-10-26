@@ -1,0 +1,177 @@
+SHOPEE AVALIAÇÕES — V6.0 | CHROME / WINDOWS
+==========================================
+EXTENSÃO DE TERCEIRO DESENVOLVIDA PARA USO LOCAL
+
+OBJETIVO
+--------
+Identificar avaliações de cinco estrelas, preparar respostas,
+percorrer páginas, separar comentários para revisão humana e,
+SE AUTORIZADO E CONFIRMADO EXPRESSAMENTE, publicar respostas.
+Nenhum robô de IA, servidor de terceiros, senha ou token da Shopee é usado.
+A extensão funciona somente quando a aba da Central do Vendedor
+está aberta. Não é um agendador em segundo plano.
+
+ATENÇÃO
+-------
+- A leitura foi adaptada a prints da página e testada com uma interface simulada.
+- A automação de ENVIO REAL NÃO foi validada em uma conta da Shopee.
+- O uso de bots ou automações não autorizados pode contrariar regras da Shopee.
+  Confirme a autorização antes de executar envios reais.
+- Esta extensão não realiza chamadas a APIs ocultas e não contorna CAPTCHA.
+- A publicação real é OPT-IN; nunca é habilitada automaticamente após instalar.
+- Quando um envio é incerto, o processo para. É indispensável conferir na Shopee.
+- Não execute mais de uma cópia do Chrome/perfil ao mesmo tempo.
+
+MELHORIAS V5
+------------
+1. APROVAÇÃO OBRIGATÓRIA POR COMENTÁRIO (PADRÃO)
+   Toda avaliação com texto recebe status “Revisar comentário”.
+   Mesmo quando são cinco estrelas, não é publicada em lote até clicar
+   “Aprovar comentário para automação” no painel e confirmar.
+   Comentários com indícios de reclamação continuam bloqueados para envio
+   automático; faça atendimento manual.
+
+2. PROTEÇÃO CONTRA DUAS ABAS
+   Um bloqueio único no perfil do Chrome impede duas execuções automáticas
+   simultâneas. Em caso de falha/interrupção, a reserva expira sozinha.
+
+3. APROVAÇÃO INVALIDADA APÓS MUDANÇAS
+   Se produto ou comentário mudou desde a última aprovação, o aplicativo
+   cancela a aprovação anterior e reserva o item para nova revisão.
+
+4. CONFIRMAÇÃO DE ENVIO MAIS RIGOROSA
+   O sumiço de um cartão NÃO é prova de publicação.
+   O aplicativo exige uma mensagem de sucesso reconhecível na interface.
+   Sem confirmação, interrompe, bloqueia o ID e não tenta reenviar.
+
+5. LOJAS SEPARADAS NO PAINEL
+   Fila, contadores e relatórios se referem à loja ativa.
+   IDs de avaliação de lojas diferentes não se misturam.
+
+6. NOVO PAINEL RELATÓRIOS
+   Exportação CSV por loja, exportação CSV de logs e restauração de backup JSON.
+   O arquivo CSV inclui dados comerciais/avaliações e deve ser protegido.
+   A V5 protege contra fórmulas iniciadas pelos caracteres = + - @.
+
+7. INTERVALO ENTRE ENVIOS
+   Configurável entre 1,5 e 15 segundos; padrão 2,5 segundos.
+
+8. CONFERÊNCIA PRÉ-EXECUÇÃO
+   Botão para examinar avaliações visíveis, comentários e notas incertas,
+   sem publicar nada.
+
+ATUALIZAR A V3 PRESERVANDO HISTÓRICO
+-----------------------------------
+OPÇÃO A - na MESMA pasta já instalada (RECOMENDADA):
+1. Abra a V3: Painel -> Exportar backup. Guarde o arquivo JSON.
+2. Abra chrome://extensions e veja o caminho da extensão instalada.
+3. Feche todas as abas de avaliações e interrompa a automação antiga.
+4. Extraia este ZIP e COPIE os arquivos de shopee_avaliacoes_v4/extension
+   para o INTERIOR da mesma pasta extension/ que a V3 usava, substituindo.
+5. Em chrome://extensions, clique RECARREGAR na extensão instalada.
+6. Abra a Shopee, pressione F5 e confirme no popup que aparece V6.0.
+7. Revise a loja ativa, modelos de mensagem e o novo filtro de aprovação.
+
+OPÇÃO B - instalar em outra pasta (NOVA instalação):
+1. Extraia o ZIP para uma pasta fixa no Windows.
+2. Abra chrome://extensions, ative Modo do desenvolvedor.
+3. Clique Carregar sem compactação e selecione a pasta extension.
+4. Atenção: nova instalação pode ter ID diferente e histórico separado.
+5. Para trazer registros, use Relatórios -> Restaurar backup no painel V5.
+6. Desative/remova a V3 após confirmar que a V5 está funcionando.
+
+PRIMEIRO TESTE RECOMENDADO
+-------------------------
+1. Abra Shopee > Central do Vendedor > Gerenciar Avaliações.
+2. Escolha 'Para Responder', marque só '5 estrelas' e clique Aplicar.
+3. Abra o popup da extensão V5 e escolha 'Usar a loja identificada'.
+4. Clique 'Conferir segurança desta página'.
+5. Clique 'TESTAR automaticamente (SEM ENVIAR)'.
+6. Confira contadores e a fila no painel. Nenhuma publicação acontece.
+7. Abra um comentário positivo no painel; confira o texto sugerido.
+8. Se for adequado, use “Aprovar comentário para automação”.
+9. Comentários com possível reclamação devem ser tratados manualmente.
+10. Só considere 'INICIAR PUBLICAÇÃO AUTOMÁTICA' caso possua autorização
+    da plataforma e após testes pequenos, supervisionados e bem-sucedidos.
+
+CONTROLE DE ENVIO INCERTO
+-------------------------
+Se houve clique em Enviar, mas o aplicativo não observou confirmação:
+- o registro fica como 'Envio não confirmado';
+- a próxima execução real é bloqueada para essa loja;
+- consulte o pedido diretamente na Shopee;
+- se confirmar que foi enviado, clique no registro do painel e
+  'Já confirmei envio na Shopee', digitando CONFIRMADO;
+- se NÃO tiver certeza de que enviou, não libere reenvio por tentativa.
+  Resolva manualmente pela Shopee para não gerar resposta duplicada.
+
+IMPORTANTE SOBRE ARMAZENAMENTO
+-----------------------------
+Registros são armazenados no próprio perfil Chrome (chrome.storage.local),
+que possui cota de armazenamento. Faça backups periódicos e exporte relatórios;
+a extensão não sincroniza dados entre computadores/perfis.
+Não desinstale antes de exportar seu backup; isso poderá apagar o histórico.
+
+ESTRUTURA DO PROJETO
+--------------------
+extension/manifest.json    Manifest V3
+extension/background.js    Bloqueio único entre abas
+extension/shared.js        Configurações, dados e regras de aprovação
+extension/content.js       Leitura e interação visual com a Shopee
+extension/automation.js    Execução sequencial com opt-in
+extension/popup.*         Painel compacto e pré-conferência
+extension/dashboard.*     Fila, mensagens, ajustes e relatórios
+extension/styles.css      Estilo visual
+extension/v2.css          Estilo adicional
+extension/assets/         Ícones
+
+TESTES AUTOMATIZADOS (OPCIONAIS PARA DESENVOLVEDORES)
+---------------------------------------------------
+Requer Node.js, Python Playwright e Chromium.
+python tests/test_interface.py
+node tests/test_shared_v2.js
+python tests/test_automation.py
+python tests/test_dashboard_v4.py
+
+Todos os testes usam dados fictícios e DOM simulado. Eles NÃO provam
+compatibilidade com futuras mudanças de HTML ou autorização Shopee.
+
+
+MELHORIAS V6 — FILTRO DE RECLAMAÇÕES 5 ESTRELAS
+------------------------------------------------
+- Leitura local de texto em português BR, abreviações e negações.
+- Detecção de reclamações diretas e indiretas; comentários incertos vão para análise humana.
+- Elogios com frases como "não tive problemas" não são classificados como reclamação.
+- No painel: botão "Reanalisar comentários e histórico" e motivo do alerta em cada cartão.
+- Registros anteriormente enviados podem ser marcados para auditoria, SEM reenvio.
+- Caso suspeito é BLOQUEADO para publicação automática mesmo se a exigência de aprovação de elogios for desativada.
+- A análise é heurística e pode errar; monitore os primeiros lotes e revise alertas.
+- Não responde a reclamações com um agradecimento genérico automaticamente.
+
+ATUALIZAÇÃO: 1) Faça backup pelo painel atual. 2) Copie os arquivos da pasta extension V5 sobre
+a MESMA pasta já instalada. 3) Abra chrome://extensions e clique em Recarregar.
+4) Abra o painel V5 e clique em Reanalisar comentários e histórico ANTES de nova execução.
+
+
+MELHORIAS V6 — VELOCIDADE EQUILIBRADA
+------------------------------------
+- O intervalo padrão entre envios foi reduzido de 2,5 s para 2,0 s.
+- A abertura da janela Responder usa detecção imediata do elemento, sem aguardar 350 ms fixos.
+- A confirmação de envio é observada pelo DOM; não precisa mais aguardar checagens de 250 em 250 ms.
+- A mudança de página também é detectada por eventos do DOM, com checagem de estabilidade.
+- A confirmação positiva deve ser NOVA, emitida após o clique atual, não um aviso antigo.
+- Uma execução é sempre sequencial, com limite de 100 e sem reenvio automático em resultados incertos.
+- Em configurações migradas do padrão de 2,5 s, o novo padrão passa para 2,0 s.
+- Valores personalizados anteriores, diferentes de 2,5 s, são preservados.
+- Caso a plataforma sinalize limite, lentidão ou falha, reduza a cadência e execute sob supervisão.
+
+ATUALIZAÇÃO SEM PERDER HISTÓRICO
+--------------------------------
+1. Na V5, exporte um BACKUP JSON pelo painel.
+2. Feche a automação antiga.
+3. Copie os arquivos da pasta extension da V6 sobre os da V5, NO MESMO LOCAL.
+4. Recarregue a extensão em chrome://extensions e dê F5 na aba Shopee.
+5. Abra o painel e confirme o intervalo entre envios na aba Configurações.
+6. Faça teste SEM ENVIAR antes de publicar; envios reais continuam sujeitos a autorização.
+
+OBS: Testes locais são simulados e não confirmam o comportamento da Shopee real.

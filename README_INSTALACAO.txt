@@ -1,94 +1,93 @@
-SHOPEE AVALIAÇÕES — REVISÃO ASSISTIDA V2.0
-=======================================
-Extensão Google Chrome para Windows. NÃO USA AGENTES DE IA.
+SHOPEE AVALIAÇÕES — V7.0
+==========================
+Extensão Chrome para auxiliar no tratamento de avaliações na Central do Vendedor.
+A automação prepara e percorre avaliações de 5 estrelas, com meta de 50, 100,
+200, 500 ou 1000 respostas confirmadas por execução,
+filtra críticas, registra ações e pode publicar SOMENTE com autorização expressa.
 
-O QUE FOI IMPLEMENTADO
----------------------
-- Painel próprio com fila, edição de mensagens, modelos, configurações e logs.
-- Leitura sob comando do usuário dos cartões da página Gerenciar Avaliações.
-- Apenas avaliações comprovadamente de 5 estrelas entram na fila.
-- Limite de 100 novos cartões da Shopee por execução, entre várias páginas.
-- Bloqueio de duplicatas por loja + identificador estável da avaliação.
-- Identificação tentativa do nome da loja na página. Configuração inicial: Múltiplo Mix.
-- Avaliações com possíveis reclamações são sinalizadas e NÃO recebem resposta genérica.
-- Botão 'Abrir e preencher': localiza a avaliação na página, abre a janela
-  'Responder' e insere a mensagem SEM CLICAR 'ENVIAR'.
-- Botão 'Próxima página + nova leitura', acionado manualmente e conservador.
-- Registro da conclusão apenas quando o operador confirma ter enviado manualmente.
-- Registro local de logs e opção de exportar backup JSON.
-- Importação manual e demonstração para treinamento sem Shopee.
+NOVIDADES V7: META DE RESPOSTAS E CONTROLE
+------------------------------------
+1. Escolha 50, 100, 200, 500 ou 1.000 respostas no popup ou no painel.
+2. A contagem refere-se a envios confirmados, não avaliações apenas analisadas.
+3. Ao abrir a janela Responder, o rascunho é preenchido assim que o modal aparece
+   (não existe mais espera fixa de 350 ms).
+4. Após clicar em Enviar, a extensão observa a confirmação assim que ela é exibida;
+   não precisa aguardar a próxima checagem periódica de 250 ms.
+5. Passagem de página reage à atualização real da tela, com checagem de estabilidade.
+6. Avisos antigos de 'enviado com sucesso' NÃO validam uma nova publicação.
+7. Sem publicações em paralelo, sem tentativas repetidas em caso de resultado incerto.
+8. Mantém reconhecimento de reclamações com 5 estrelas (V5), histórico e proteção por loja.
 
-COMO INSTALAR NO GOOGLE CHROME
------------------------------
-1. Extraia todo o ZIP para uma pasta que NÃO será movida, por exemplo:
-   C:\ShopeeAvaliacoesV2\
-2. Abra o Chrome e acesse chrome://extensions
-3. Ative 'Modo do desenvolvedor'.
-4. Clique em 'Carregar sem compactação'.
-5. Selecione a pasta 'extension' DENTRO de shopee_avaliacoes_v2.
-6. Fixe o ícone 'Shopee Avaliações — Revisão Assistida' na barra do Chrome.
-7. Caso já tenha V1 instalada, remova/desative a V1 DEPOIS de fazer backup
-   do histórico, para não confundir as duas extensões. Ao instalar V2 em
-   outro diretório o Chrome pode usar outro ID, sem migrar registros da V1.
+ATUALIZAÇÃO SEM PERDER O HISTÓRICO (RECOMENDADA)
+----------------------------------------------
+1. Abra o painel da extensão V6 e clique em 'Exportar backup'. Guarde o JSON.
+2. Encerre qualquer execução ativa na V6 antes de atualizar.
+3. Extraia este arquivo ZIP para uma pasta no Windows.
+4. Copie TODOS os arquivos DENTRO de shopee_avaliacoes_v7/extension
+   para DENTRO da pasta 'extension' que já era utilizada pela V6.
+   Substitua os arquivos antigos. NÃO apague o diretório da extensão instalada.
+5. Abra chrome://extensions e clique em 'Recarregar' na extensão existente.
+6. Volte à aba da Shopee e pressione F5.
+7. Abra o painel e confirme V7.0 e, em Configurações, '2 s · equilibrado'.
+8. Execute 'TESTAR automaticamente (SEM ENVIAR)' antes de autorizar publicação real.
 
-PRIMEIRO TESTE NA SHOPEE
------------------------
-1. Faça login normalmente na Central do Vendedor, em seller.shopee.com.br.
-2. Entre em Atendimento ao Cliente > Gerenciamento de Revisões/Avaliações.
-3. No filtro Status, clique em 'Para Responder'.
-4. Em Avaliações por Estrela, deixe marcada SOMENTE '5 estrela'.
-5. Clique em 'Aplicar' e espere os cartões aparecerem.
-6. Clique no ícone da extensão e em '1. Ler avaliações desta página'.
-7. Confira o diagnóstico: cartões encontrados, avaliações adicionadas,
-   repetidas, notas incertas, loja detectada e textos a revisar.
-8. Na 'Fila de revisão', revise o comentário e a mensagem proposta.
-9. Clique em 'Abrir e preencher rascunho': a extensão deverá abrir o modal
-   da avaliação que está na página e preencher o texto. NÃO PUBLICA.
-10. Confira a resposta. Se desejar, clique em 'Enviar' MANUALMENTE na Shopee.
-11. Somente depois do envio real, retorne ao painel da extensão e marque
-    'Marcar feita manualmente'. A extensão NÃO verifica automaticamente envio.
-12. Feche o modal, clique em 'Próxima página + nova leitura' e repita.
+INSTALAÇÃO NOVA (SEM EXTENSÃO ANTERIOR)
+--------------------------------------
+1. Extraia o ZIP em uma pasta fixa no computador.
+2. No Chrome, acesse chrome://extensions e ligue o Modo do desenvolvedor.
+3. Clique em 'Carregar sem compactação' e escolha a pasta
+   shopee_avaliacoes_v7/extension, que contém manifest.json.
+4. Abra a Central do Vendedor Shopee > Gerenciar Avaliações.
+5. Selecione 'Para Responder', marque apenas '5 estrelas' e clique 'Aplicar'.
+6. Abra o ícone da extensão, selecione a loja detectada e inicie o modo TESTE SEM ENVIAR.
 
-CONFIGURAÇÕES DE ENTREGA
------------------------
-  automação de PREPARAÇÃO: habilitada
-  notas: SOMENTE 5 estrelas
-  notas de 1 a 4 estrelas: excluídas
-  limite: 100 AVALIAÇÕES NOVAS por execução de leitura em páginas
-  modo: revisão humana
-  envio da Shopee: desativado, sem qualquer caminho de publicação automática
-  respostas: até 500 caracteres
-  armazenamento: chrome.storage.local no seu computador
+ATENÇÃO: nova instalação em pasta/ID diferente pode ter armazenamento local separado;
+importe um backup da V6 por meio do painel em Relatórios > Restaurar backup.
 
-AVISOS E LIMITAÇÕES
-------------------
-- A Shopee altera o HTML da Central do Vendedor. Como não há acesso real à sua
-  conta durante a construção, os seletores são heurísticos e precisam de
-  validação ao vivo. Se a extensão informar nota/ID incerto ou não identificar
-  cartão/modal/paginação, ela BLOQUEIA a ação e informa o problema.
-- A tela da Shopee enviada como referência mostra aconchegoimportados,
-  enquanto a configuração inicial da extensão vem de Múltiplo Mix. Confira
-  a loja detectada após cada coleta. Registros são separados pelo nome da loja.
-- Não há serviço em segundo plano, agendamento semanal nem envio em lote.
-  A leitura, a abertura do modal e a paginação dependem de ações do usuário.
-- Chrome e sessão Shopee devem permanecer ativos. Não armazenamos senha.
-- Cuidado com dados pessoais em backups: comentários e IDs ficam salvos
-  somente no armazenamento local deste perfil do Chrome.
-- Os termos da Shopee podem restringir automações de interface não autorizadas;
-  utilize somente mediante observância das regras da plataforma.
-- No primeiro teste, use UMA avaliação real, confira a loja e a mensagem,
-  e NÃO clique em Enviar enquanto a automação não estiver validada.
+CONFIGURAÇÕES DE VELOCIDADE
+--------------------------
+Painel > Configurações > Intervalo entre envios:
+  1,5 s = mais rápido, requer teste cauteloso
+  2,0 s = equilibrado (NOVO padrão)
+  2,5 s = padrão anterior
+  3,5 s = conservador
+  5 / 10 / 15 s = mais pausado
 
-ARQUIVOS IMPORTANTES
---------------------
-extension/manifest.json     configuração Chrome Manifest V3
-extension/content.js       integração com os cartões/modal/paginação
-extension/popup.html/js    controles na barra do Chrome
-extension/dashboard.html/js  painel de revisão, mensagens, logs
-extension/shared.js        deduplicação, regras e armazenamento
-extension/styles.css/v2.css  interface
-tests/test_shared_v2.js teste de regras offline
-tests/test_interface.py teste de interface em página fictícia via Playwright
+O padrão de 2,0 s e as configurações personalizadas de intervalo são preservados.
+Outros valores personalizados são preservados.
 
-Para atualizar: edite os arquivos na MESMA pasta e clique em Recarregar
-em chrome://extensions; o histórico será mantido no perfil dessa extensão.
+SEGURANÇA E LIMITAÇÕES
+----------------------
+- Publicação real desativada por padrão e requer confirmação explícita.
+- Use publicação automatizada somente caso esteja autorizado pela plataforma.
+- Comentários críticos/ambíguos continuam bloqueados mesmo com 5 estrelas.
+- Comentários positivos podem exigir aprovação individual conforme ajustes.
+- Se o envio não apresentar uma NOVA confirmação positiva, a extensão bloqueia
+  outras tentativas e exige verificação humana para não criar respostas duplicadas.
+- Este projeto foi testado em uma interface Shopee SIMULADA, não na conta real.
+- O Chrome e a Shopee podem mudar comportamento. Mantenha a aba aberta e supervisionada.
+- Não há tentativa de contornar CAPTCHA, autenticação ou limites da plataforma.
+- O armazenamento de avaliações, mensagens e logs é local ao perfil do Chrome.
+- Não desinstale a versão anterior antes de exportar o backup.
+
+TESTES TÉCNICOS (OPCIONAIS)
+-------------------------
+Requer Node.js, Python Playwright e Chromium.
+   node tests/test_shared_v2.js
+   node tests/test_sentimento_v5.js
+   python tests/test_interface.py
+   python tests/test_automation.py
+   python tests/test_dashboard_v4.py
+   python tests/test_speed_v6.py
+
+Teste de velocidade realizado em DOM simulado: não garante o mesmo tempo no site real.
+
+V7 - META DE RESPOSTAS
+- No popup da extensão escolha 50, 100, 200, 500 ou 1.000 respostas.
+- A publicação só para por meta ao atingir esse número de envios confirmados.
+- Não contam na meta: notas diferentes de 5, reclamações, comentários não aprovados, já respondidas e envios não confirmados.
+- Para evitar coleta sem fim, há limites independentes de até 6 vezes a meta (no máximo 6.000 avaliações novas) e até 800 páginas. Se a Shopee acabar as páginas antes da meta, a operação encerra com quantidade inferior.
+- O teste sem envio contabiliza respostas consideradas aptas, NÃO publicações.
+- A meta é salva nas configurações do Chrome; alterar meta exige execução parada.
+- Se houver envio incerto, a execução é interrompida como antes.
+- Esta versão NÃO foi validada em conta real da Shopee. O uso de publicação automática requer autorização da plataforma.

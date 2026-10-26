@@ -1,5 +1,5 @@
-/* Adaptador da página da Central do Vendedor Shopee — ações iniciadas pelo usuário.
- * Nunca executa o clique no botão Enviar e nunca faz chamadas de rede.
+/* Adaptador de leitura da Shopee (V6): teste sem envio; publicação só com opt-in explícito.
+ * Não faz chamadas de rede.
  * Como a Shopee altera o HTML, inclui diagnóstico e descarta notas incertas.
  */
 (() => {
@@ -41,6 +41,16 @@ function locateCards(){
 }
 function starRating(card){
  // Só aceita nota comprovável; não confundir estrela do cabeçalho com a do cartão.
+ const appearsEmpty=(n)=>{
+   const classText=String(n.getAttribute('class')||'').toLowerCase();
+   if(/empty|hollow|outline|inactive|unfilled|disabled|unselected/.test(classText))return true;
+   const markup=n.outerHTML.slice(0,850).toLowerCase();
+   if(/fill=["']none["']|stroke=["']#(?:ddd|ccc|eee|e5e5e5|d9d9d9)["']/.test(markup))return true;
+   const st=String(n.getAttribute('style')||'').toLowerCase();
+   if(/(?:color|fill)\s*:\s*(?:#(?:ccc|ddd|eee|d9d9d9|e5e5e5|bdbdbd)|rgb\(\s*2(?:0[0-9]|1[0-9]|2[0-9]|3[0-9])\s*,)/.test(st))return true;
+   return false;
+ };
+
  for(const el of card.querySelectorAll('[data-rating],[data-stars],[data-score],[aria-label],[title]')){
    for(const attr of ['data-rating','data-stars','data-score']){
      const v=el.getAttribute(attr);if(/^[1-5](?:[.,]0)?$/.test(v||''))return Number(v.replace(',','.'));
@@ -54,10 +64,10 @@ function starRating(card){
  const rated=card.querySelectorAll('[class*="rating-star"], [class*="star-icon"], .shopee-rating-stars__star, [class*="star-solid"]');
  if(rated.length===5){
    // Cinco classes de estrela preenchida identificadas é uma evidência melhor que o texto solto.
-   if([...rated].every(n=>!/empty|hollow|outline|inactive|off/i.test(n.className?.baseVal||n.className||'')))return 5;
+   if([...rated].every(n=>!appearsEmpty(n)))return 5;
  }
  const stars=card.querySelectorAll('svg[class*="star"], svg[aria-label*="estrela"], i[class*="star"]');
- if(stars.length===5 && [...stars].every(n=>!/empty|hollow|outline|inactive/i.test(n.getAttribute('class')||'')))return 5;
+ if(stars.length===5 && [...stars].every(n=>!appearsEmpty(n)))return 5;
  // Shopee frequentemente usa ícone SVG sem classe star: localizar fileiras de 5 símbolos visíveis.
  for(const el of card.querySelectorAll('div,span')){
    if(!shown(el)||el.children.length!==5||txt(el).length>25)continue;
@@ -125,6 +135,26 @@ function dialog(){
  }
  return null;
 }
+// V6: aguarda mudanças reais no DOM, sem atrasos fixos no fluxo normal.
+// A verificação periódica só serve como fallback; toda espera possui tempo máximo.
+function waitForDOM(check, timeoutMs=9000){
+ return new Promise(resolve=>{
+  let done=false, observer=null, fallback=null, timer=null;
+  const cleanup=()=>{observer?.disconnect();clearInterval(fallback);clearTimeout(timer);};
+  const finish=value=>{if(done)return;done=true;cleanup();resolve(value);};
+  const run=()=>{
+   if(done)return;
+   let result=null;
+   try{result=check();}catch{return;}
+   if(result)finish(result);
+  };
+  observer=new MutationObserver(run);
+  observer.observe(document.documentElement||document,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['class','style','hidden','aria-hidden','disabled']});
+  fallback=setInterval(run,200);
+  timer=setTimeout(()=>finish(null),timeoutMs);
+  run();
+ });
+}
 function fillInput(el,value){
  el.focus();
  if(el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement){
@@ -141,9 +171,12 @@ async function openDraft(ref,message){
  if(!r)return {ok:false,error:'Avaliação não localizada nesta página. Atualize a coleta ou confira a paginação.'};
  // Validação dupla: nunca abrir uma avaliação que deixou de ser 5 estrelas.
  if(getInfo(r.card).rating!==5)return {ok:false,error:'Nota de 5 estrelas não comprovada. Ação bloqueada.'};
- if(!dialog())r.button.click(); // ABRE APENAS o modal; não envia.
- await new Promise(resolve=>setTimeout(resolve,250));
- const mod=dialog();if(!mod)return {ok:false,error:'Modal de resposta não identificado. Nenhuma mensagem foi enviada.'};
+ if(dialog())return {ok:false,error:'Já existe um modal aberto. Feche-o antes de preparar outra avaliação.'};
+ // O observador é ligado antes do clique, evitando perder um modal muito rápido.
+ const modalWait=waitForDOM(()=>dialog(),2600);
+ r.button.click(); // Abre apenas o modal; não envia.
+ const mod=await modalWait;
+ if(!mod)return {ok:false,error:'Modal de resposta não identificado em 2,6 segundos. Nenhuma mensagem foi enviada.'};
  if(String(message).length>500)return {ok:false,error:'O texto ultrapassa 500 caracteres.'};
  fillInput(mod.area,String(message));
  return {ok:true,detail:'Rascunho preenchido. Confira o texto e clique em Enviar manualmente, caso deseje publicar.'};
@@ -152,6 +185,21 @@ function fillModal(message){
  const mod=dialog();if(!mod)return {ok:false,error:'Abra primeiro a janela Responder da Shopee.'};
  if(String(message).length>500)return {ok:false,error:'Limite de 500 caracteres.'};
  fillInput(mod.area,String(message));return {ok:true,detail:'Texto inserido no campo, sem envio.'};
+}
+function firstPage(){
+ if(dialog())return {ok:false,error:'Feche o modal antes de trocar de página.'};
+ const pagination=[...document.querySelectorAll('[class*="pagination"],[aria-label*="agina"]')].filter(shown);
+ for(const host of pagination){
+   const nodes=[...host.querySelectorAll('li,button,a,[role="button"]')].filter(shown);
+   const active=nodes.find(n=>/active|current|selected/i.test(String(n.className?.baseVal||n.className||''))||n.getAttribute('aria-current')==='page');
+   if(!active||!/^\d+$/.test(txt(active)))continue;
+   const idx=Number(txt(active));
+   if(idx===1)return {ok:true,navigated:false};
+   const first=nodes.find(n=>exact(n,'1')&&!n.disabled);
+   if(!first)return {ok:false,error:'A paginação indica página '+idx+' mas não foi encontrado o botão da primeira página.'};
+   first.click();return {ok:true,navigated:true};
+ }
+ return {ok:true,navigated:false,uncertain:true};
 }
 function nextPage(){
  if(dialog())return {ok:false,error:'Feche a janela de resposta antes de mudar de página.'};
@@ -164,6 +212,40 @@ function nextPage(){
  if(!next)return {ok:false,error:'Botão de próxima página não identificado. Use a paginação inferior manualmente.'};
  next.click();return {ok:true,detail:'Próxima página solicitada. Aguarde o carregamento e faça uma nova leitura.'};
 }
+function reviewKey(ref){return String(ref?.externalId||'');}
+function hasVisibleReply(ref){return !!findReview(ref);}
+async function publishPrepared(ref,message){
+ // Só invocado pela execução automática opt-in; nunca em coleta/teste.
+ const mod=dialog();
+ if(!mod)return {ok:false,error:'Modal de resposta ausente: bloqueado.'};
+ const r=findReview(ref);
+ if(!r || getInfo(r.card).rating!==5)return {ok:false,error:'ID/nota da avaliação não conferem antes do envio.'};
+ if(clean(mod.area.value || mod.area.textContent)!==clean(message))return {ok:false,error:'Texto do modal não confere com o rascunho preparado.'};
+ const v=String(message||'');
+ if(!v.trim() || v.length>500)return {ok:false,error:'Mensagem vazia ou acima de 500 caracteres.'};
+ const candidates=btns(mod.host).filter(x=>exact(x,'Enviar') && !x.disabled && x.getAttribute('aria-disabled')!=='true');
+ if(candidates.length!==1)return {ok:false,error:'Botão Enviar não identificado de modo inequívoco dentro do modal.'};
+ // Ignora avisos antigos: o sucesso PRECISA surgir depois deste clique.
+ const visibleToasts=()=>[...document.querySelectorAll('[role="alert"],[class*="toast"],[class*="message"]')].filter(shown);
+ const previous=new Map(visibleToasts().map(el=>[el,txt(el)]));
+ const confirmation=waitForDOM(()=>{
+   const changed=visibleToasts().filter(el=>!previous.has(el)||previous.get(el)!==txt(el));
+   const notice=changed.map(txt).join(' ').slice(0,1200);
+   if(!notice)return null;
+   const bad=/(?:erro|falha|failed|error|tente novamente)/i.test(notice);
+   const good=/(?:resposta|avaliação|review).{0,60}(?:enviad[ao]|publicad[ao]|sucesso)|enviad[ao] com sucesso|successfully replied/i.test(notice);
+   if(bad)return {ok:false,uncertain:true,error:'Shopee exibiu possível erro após o clique em Enviar. Verifique manualmente.'};
+   if(!dialog() && good)return {ok:true,verified:true,detail:'Envio confirmado por mensagem nova de sucesso da interface.'};
+   return null;
+ },9000);
+ candidates[0].click();
+ // Nunca confundir o desaparecimento do modal ou do cartão com publicação.
+ const result=await confirmation;
+ if(result)return result;
+ return {ok:false,uncertain:true,error:'Clique em Enviar realizado, mas não apareceu nova confirmação positiva. Verifique a Shopee e reconcilie manualmente antes de outra execução.'};
+}
+window.__ShopeeReviewDOMv3={scan,shopName,getInfo,findReview,openDraft,dialog,nextPage,firstPage,hasVisibleReply,publishPrepared,waitForDOM,clean,txt};
+
 function status(){return {ok:true,page:location.href,modal:!!dialog(),detectedShop:shopName()};}
 chrome.runtime.onMessage.addListener((request,_sender,sendResponse)=>{
  (async()=>{
@@ -173,6 +255,7 @@ chrome.runtime.onMessage.addListener((request,_sender,sendResponse)=>{
   else if(type==='FILL_MODAL')result=fillModal(request.message);
   else if(type==='NEXT_PAGE')result=nextPage();
   else if(type==='STATUS')result=status();
+  else if(type?.startsWith('AUTO_') && window.__ShopeeAuto)result=await window.__ShopeeAuto.handle(request);
   else result={ok:false,error:'Comando inválido.'};
   sendResponse(result);
  })().catch(err=>sendResponse({ok:false,error:'Falha na interface: '+String(err?.message||err).slice(0,180)}));

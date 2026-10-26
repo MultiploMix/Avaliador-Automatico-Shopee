@@ -10,19 +10,28 @@ let out=App.addReviews(db,[
  {externalId:'P0002',rating:4,product:'Ventosa',comment:'Bom',shop:'aconchegoimportados'},
  {externalId:'P0003',rating:5,product:'Ventosa',comment:'Não serve nem segura',shop:'aconchegoimportados'}
  ],'shopee');
-assert.equal(out.added,2);assert.equal(out.duplicates,1);assert.equal(out.excluded,1);assert.equal(out.flagged,1);
+assert.equal(out.added,2);assert.equal(out.duplicates,1);assert.equal(out.excluded,1);assert.equal(out.flagged,2);
 assert.equal(db.run.count,2);
 assert.equal(db.reviews.find(x=>x.externalId==='P0003').status,'attention');
 assert.equal(db.reviews.find(x=>x.externalId==='P0003').message,'');
-assert.equal(db.reviews.find(x=>x.externalId==='P0001').status,'pending');
+assert.equal(db.reviews.find(x=>x.externalId==='P0001').status,'attention');
+const positive=db.reviews.find(x=>x.externalId==='P0001');
+assert.equal(App.eligibleForAuto(positive,db.settings),false);
+positive.reviewApproved=true;positive.status='approved';
+assert.equal(App.eligibleForAuto(positive,db.settings),true);
 const x=App.addReviews(db,[{externalId:'P0001',rating:5,product:'Ventosa',shop:'multiplo_mix'}],'shopee');
 assert.equal(x.added,1);assert.equal(db.run.count,3);
 const duplicated=App.addReviews(db,[{externalId:'P0001',rating:5,product:'Ventosa',shop:'aconchegoimportados'}],'shopee');
 assert.equal(duplicated.duplicates,1);
 const bulk=Array.from({length:130},(_,i)=>({externalId:`BULK-${i}`,rating:5,product:'Teste',shop:'aconchegoimportados'}));
 const run=App.addReviews(db,bulk,'shopee');
-assert.equal(run.added,97);assert.equal(db.run.count,100);assert.equal(run.limited,33);
-assert.equal(App.addReviews(db,[{externalId:'LATE',rating:5,product:'Teste'}],'shopee').added,0);
+assert.equal(run.added,130);assert.equal(db.run.count,133);assert.equal(run.limited,0);
+assert.equal(App.addReviews(db,[{externalId:'LATE',rating:5,product:'Teste'}],'shopee').added,1);
+assert.equal(App.collectionCap(100),600);
+assert.equal(App.collectionCap(1000),6000);
+const remaining=600-db.run.count;
+assert.equal(App.addReviews(db,Array.from({length:remaining+1},(_,i)=>({externalId:'MORE-'+i,rating:5,product:'Teste'})),'shopee').added,remaining);
+assert.equal(App.addReviews(db,[{externalId:'LATER',rating:5,product:'Teste'}],'shopee').added,0);
 assert.equal(App.parseLines('xx | 5 | Produto | Excelente').valid.length,1);
 assert.equal(App.hasConcern('Pressão: não serve nem pra segurar pano'),true);
-console.log('OK: configurações, 5 estrelas, duplicatas entre lojas, reclamações e limite 100.');
+console.log('OK: configurações, 5 estrelas, duplicatas entre lojas, reclamações e limite independente de coleta.');

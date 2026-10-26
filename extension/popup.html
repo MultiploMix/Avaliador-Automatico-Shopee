@@ -1,15 +1,30 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shopee Avaliações — V2</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="v2.css"></head>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shopee Avaliações — V7</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="v2.css"></head>
 <body class="popup-body"><main class="popup-wrap">
-  <div class="brand compact"><span class="brand-icon">★</span><div><strong>Shopee Avaliações</strong><small>Revisão assistida • V2.0</small></div></div>
-  <div class="safe">● MODO REVISÃO • NÃO ENVIA RESPOSTAS</div>
-  <div class="popup-grid"><div class="stat"><span>Fila a revisar</span><b id="pending">0</b></div><div class="stat"><span>Coletadas nesta execução</span><b id="run-count">0 / 100</b></div></div>
-  <div class="small-details"><span>Loja configurada</span><strong id="shop">—</strong><span>Critério</span><strong>5 estrelas apenas</strong><span>Controle</span><strong>Revisão humana</strong></div>
+  <div class="brand compact"><span class="brand-icon">★</span><div><strong>Shopee Avaliações</strong><small>Automação controlada • V7.0</small></div></div>
+  <div class="safe">● ENVIO AUTOMÁTICO DESATIVADO POR PADRÃO</div>
+  <div class="popup-grid"><div class="stat"><span>Fila a revisar</span><b id="pending">0</b></div><div class="stat"><span>Coletadas / teto de triagem</span><b id="run-count">0 / 600</b></div></div>
+  <div class="small-details"><span>Loja configurada</span><strong id="shop">—</strong><span>Critério</span><strong>5 estrelas apenas</strong><span>Controle</span><strong>Teste ou publicação com opt-in</strong></div>
+  <section class="auto-panel" aria-label="Automação">
+    <strong>Execução automática</strong>
+    <label class="field" for="reply-target" style="margin-top:12px"><span><b>Quantas avaliações deseja responder?</b></span><select id="reply-target"><option value="50">50 respostas</option><option value="100" selected>100 respostas</option><option value="200">200 respostas</option><option value="500">500 respostas</option><option value="1000">1.000 respostas</option></select></label>
+    <p class="tiny">A meta contabiliza somente envios confirmados. Reclamações e avaliações já respondidas não contam. No teste, a meta mede respostas aptas, sem enviar.</p>
+    <div class="auto-shop"><span>Loja identificada:</span> <b id="detected-shop">Verificar aba</b></div>
+    <button class="outline full" id="use-current-shop">Usar a loja identificada nesta aba</button>
+    <div class="auto-stats"><span id="auto-summary">Parada · 0 processadas · 0 enviadas</span></div>
+    <button class="outline full" id="auto-preflight">✓ Conferir segurança desta página</button>
+    <button class="secondary full" id="auto-test">▶ TESTAR automaticamente (SEM ENVIAR)</button>
+    <button class="primary full" id="auto-publish">▶ INICIAR PUBLICAÇÃO AUTOMÁTICA</button>
+    <button class="outline full" id="auto-stop">■ PARAR AUTOMATIZAÇÃO</button>
+    <p class="tiny"><b>V7:</b> insatisfação e ambiguidade bloqueiam o envio independentemente das configurações; comentários elogiosos exigem aprovação quando a opção estiver ativa. Uma execução por vez em todas as abas. Envio incerto interrompe outras publicações.</p>
+    <p class="tiny">A publicação é uma ação real e só começa após confirmação explícita. Requer autorização da Shopee. A conta deve permanecer conectada e a aba aberta.</p>
+  </section>
+
   <button class="primary full" id="scan">1. Ler avaliações desta página</button>
   <button class="secondary full" id="next">Próxima página + nova leitura ›</button>
-  <button class="outline full" id="reset-run">Nova execução (limite de 100)</button>
+  <button class="outline full" id="reset-run">Nova execução (reiniciar coleta)</button>
   <div id="status" role="status" aria-live="polite" class="note">Abra a tela Gerenciar Avaliações na Shopee, marque “Para Responder” e somente “5 estrelas”; depois clique em Ler.</div>
   <div class="popup-heading"><strong>Fila de revisão</strong><span id="items-count">0 itens</span></div>
   <div id="quick-queue" class="popup-review-list"></div>
   <button id="dashboard" class="secondary full">Abrir painel: editar respostas e histórico</button>
-  <p class="tiny">A extensão pode abrir a janela Responder e preencher o rascunho. Você decide manualmente se clica em Enviar. Após o envio, confirme a conclusão no painel.</p>
+  <p class="tiny">O teste automático varre páginas sem enviar. O modo de publicação pode clicar em Enviar após confirmação explícita e interrompe se não conseguir verificar o resultado. Verifique sempre os registros.</p>
 </main><script src="shared.js"></script><script src="popup.js"></script></body></html>
